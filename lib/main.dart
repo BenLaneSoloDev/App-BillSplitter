@@ -1,6 +1,5 @@
 import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -17,7 +16,66 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Namer App',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
+          colorScheme: ColorScheme(
+            brightness: Brightness.light,
+            primary: Color.fromARGB(255, 45, 143, 255),
+            onPrimary: Color.fromARGB(255, 255, 255, 255),
+            secondary: Color.fromARGB(255, 45, 189, 255),
+            onSecondary: Color.fromARGB(255, 0, 0, 0),
+            surface: Color.fromARGB(255, 255, 255, 255),
+            onSurface: Color.fromARGB(255, 0, 0, 0),
+            error: Color.fromARGB(255, 255, 45, 45),
+            onError: Color.fromARGB(255, 255, 255, 255),
+          ),
+
+          scaffoldBackgroundColor: Color.fromARGB(255, 255, 255, 255),
+
+          cardTheme: CardThemeData(
+            color: Color.fromARGB(255, 45, 189, 255),
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color.fromARGB(255, 45, 143, 255),
+              foregroundColor: Color.fromARGB(255, 255, 255, 255),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+
+          textTheme: TextTheme(
+            bodyMedium: TextStyle(
+              color: Color.fromARGB(255, 0, 0, 0),
+              fontSize: 16,
+            ),
+            bodyLarge: TextStyle(
+              color: Color.fromARGB(255, 0, 0, 0),
+              fontSize: 20,
+            ),
+            headlineMedium: TextStyle(
+              color: Color.fromARGB(255, 0, 0, 0),
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          // Styles Text Field
+          inputDecorationTheme: InputDecorationTheme(
+            hintStyle: TextStyle(
+              color: const Color.fromARGB(83, 255, 255, 255),
+            ),
+            counterStyle: TextStyle(
+              color: const Color.fromARGB(255, 255, 255, 255),
+            ),
+            labelStyle: TextStyle(
+              color: const Color.fromARGB(255, 255, 255, 255),
+            ),
+          ),
         ),
         home: MyHomePage(),
       ),
@@ -26,22 +84,20 @@ class MyApp extends StatelessWidget {
 }
 
 class MyAppState extends ChangeNotifier {
-  var current = WordPair.random();
+  var parties = <String>[];
 
-  void getNext() {
-    // changes the random word and alerts of state change
-    current = WordPair.random();
-    notifyListeners();
-  }
-
-  var favourites = <WordPair>[]; // creates a list of favourite pairs
-
-  // Adds / removes a wordpair from the list of favourites
-  void toggleFavourite() {
-    if (favourites.contains(current)) {
-      favourites.remove(current);
+  // Function to update party size, only in the positives
+  void updatePartyTotal(bool added, String partyName) {
+    if (added) {
+      // Creates specific party
+      parties.add(partyName);
+    } else if (parties.contains(partyName)) {
+      // Removes states party
+      parties.removeAt(parties.indexOf(partyName));
     } else {
-      favourites.add(current);
+      print(added);
+      print(partyName);
+      print("Nothing Happened");
     }
     notifyListeners();
   }
@@ -53,58 +109,145 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  var selectedIndex = 0;
-
   @override
   Widget build(BuildContext context) {
-    // Based on the selected index, it will choose which page to run
-    Widget page;
-    switch (selectedIndex) {
-      case 0:
-        page = GeneratorPage();
-        break;
-      case 1:
-        page = FavouritesPage();
-        break;
-      default:
-        throw UnimplementedError('no widget for $selectedIndex');
+    var appState = context.watch<MyAppState>();
+    int parties = appState.parties.length;
+    bool adding = true;
+
+    String header = "Total Parties: $parties";
+    if (parties == 0) {
+      //defaults header
+      header = "How many parties are there?";
     }
 
+    // Creates a box with constraints so things can be scaled
     return LayoutBuilder(
       builder: (context, constraints) {
+        // Variable For Storing Value From TextBox
+        final textController = TextEditingController();
         return Scaffold(
-          body: Row(
-            children: [
-              SafeArea(
-                child: NavigationRail(
-                  // puts full named labels on icons when whole home screen goes wider than 600 pixels
-                  extended: constraints.maxWidth >= 600,
-                  destinations: [
-                    NavigationRailDestination(
-                      icon: Icon(Icons.home),
-                      label: Text('Home'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.favorite),
-                      label: Text('Favorites'),
-                    ),
-                  ],
-                  selectedIndex: selectedIndex,
-                  onDestinationSelected: (value) {
-                    setState(() {
-                      // changes current state to which tab is selected
-                      selectedIndex = value;
-                    });
-                  },
+          body: SafeArea(
+            child: Container(
+              padding: EdgeInsets.symmetric(vertical: 80.0),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(30.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        header,
+                        style: Theme.of(context).textTheme.headlineMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                      Flexible(
+                        fit: FlexFit.loose,
+                        child: Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: parties,
+                            itemBuilder: (context, index) {
+                              // Generates Colour to give each party tab
+                              final color = Colors
+                                  .primaries[index % Colors.primaries.length]
+                                  .shade300;
+                              // Creates each party tab
+                              return PartyLabel(
+                                appState: appState,
+                                index: index,
+                                tabColor: color,
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Add Button
+                              ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  minWidth: 100,
+                                  maxWidth: 200,
+                                ),
+                                child: TextField(
+                                  // Max characters is 15
+                                  maxLength: 15,
+                                  // Controller to hold text box data
+                                  controller: textController,
+                                  decoration: InputDecoration(
+                                    hintText: "Party Name",
+                                    filled: false,
+                                    border: InputBorder.none,
+                                  ),
+                                  // If the text is entered through
+                                  onSubmitted: (value) {
+                                    if (value != "") {
+                                      appState.updatePartyTotal(
+                                        adding,
+                                        textController.text,
+                                      );
+                                      textController.clear();
+                                    }
+                                  },
+                                  buildCounter:
+                                      (
+                                        BuildContext context, {
+                                        required int currentLength,
+                                        required int? maxLength,
+                                        required bool isFocused,
+                                      }) {
+                                        return Align(
+                                          alignment: Alignment.topLeft,
+                                          child: Text(
+                                            "$currentLength / $maxLength",
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: const Color.fromARGB(
+                                                255,
+                                                109,
+                                                63,
+                                                63,
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                ),
+                              ),
+
+                              SizedBox(width: 10.0),
+
+                              ElevatedButton(
+                                onPressed: () {
+                                  // add a new party (shouldnt submit if blank name)
+                                  if (textController.text != "" ||
+                                      textController.text == "") {
+                                    appState.updatePartyTotal(
+                                      adding,
+                                      textController.text,
+                                    );
+                                    textController.clear();
+                                  }
+                                },
+                                child: Text("+"),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              Expanded(
-                child: Container(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  child: page,
-                ),
-              ),
-            ],
+            ),
           ),
         );
       },
@@ -112,128 +255,55 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-// first page that generates the favourites
-class GeneratorPage extends StatelessWidget {
+class PartyLabel extends StatelessWidget {
+  const PartyLabel({
+    super.key,
+    required this.appState,
+    required this.index,
+    required this.tabColor,
+  });
+
+  final MyAppState appState;
+  final int index;
+  final Color tabColor;
+
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-    var pair = appState.current;
+    var parties = appState.parties.length;
+    bool adding = true;
+    String name = appState.parties[index];
 
-    IconData icon;
-    if (appState.favourites.contains(pair)) {
-      icon = Icons.favorite;
-    } else {
-      icon = Icons.favorite_border;
-    }
-
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          BigCard(pair: pair),
-          SizedBox(height: 10),
-          Row(
+    return Align(
+      alignment: Alignment.center,
+      child: Card(
+        color: tabColor,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 5.0, right: 5.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              ElevatedButton.icon(
-                onPressed: () {
-                  appState.toggleFavourite();
-                },
-                icon: Icon(icon),
-                label: Text('Like'),
+              CircleAvatar(
+                radius: 15,
+                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                child: Text(
+                  (index + 1).toString(),
+                  style: TextStyle(color: Theme.of(context).primaryColorDark),
+                ),
               ),
-              SizedBox(width: 10),
-              ElevatedButton(
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                child: Text(name),
+              ),
+              IconButton(
+                icon: Icon(Icons.delete),
                 onPressed: () {
-                  appState.getNext();
+                  // Remove this party
+                  appState.updatePartyTotal(!adding, name);
                 },
-                child: Text('Next'),
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class FavouritesPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-    for (var i = 0; i < appState.favourites.length; i++) {
-      // Add to list of favourites
-    }
-
-    // Returns a blank screen if no favourites
-    if (appState.favourites.isEmpty) {
-      return Center(child: Text('No favorites yet.'));
-    }
-
-    return Center(
-      child: ListView(
-        children: [
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Text(
-                'You have '
-                '${appState.favourites.length} favorites:',
-              ),
-            ),
-          ),
-          // adds children for every item in my list
-          for (var text in appState.favourites)
-            FavWord(text: text.asPascalCase),
-        ],
-      ),
-    );
-  }
-}
-
-class FavWord extends StatelessWidget {
-  final String text;
-  const FavWord({super.key, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(5.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [Icon(Icons.favorite), Text(text)],
-      ),
-    );
-  }
-}
-
-class BigCard extends StatelessWidget {
-  const BigCard({super.key, required this.pair});
-
-  final WordPair pair;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context); // grabs the main app theme
-
-    final tStyle = theme.textTheme.displayMedium!.copyWith(
-      // accessess fonts theme to change the size to display medium
-      // it also sets colour to something that goes well with the apps primary colour
-      // it also uses copyWith to make a duplicate to allow these minor changes
-      color: theme.colorScheme.onPrimary,
-      letterSpacing: 1.0,
-    );
-
-    return Card(
-      color: theme.colorScheme.primary,
-      elevation: 2.0,
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Text(
-          pair.asPascalCase,
-          style: tStyle,
-          // the real value of the text when used in the backend
-          semanticsLabel: '${pair.first} ${pair.second}',
         ),
       ),
     );
