@@ -1,6 +1,11 @@
-import 'package:english_words/english_words.dart';
+import 'package:app_billsplitter/Screens/Main/home_screen.dart';
+import 'package:app_billsplitter/Screens/Main/snapshot_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+// Importing used components
+import 'app_state.dart';
+import 'Screens/Main/party_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -77,235 +82,37 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
-        home: MyHomePage(),
+        home: MainPage(),
       ),
     );
   }
 }
 
-class MyAppState extends ChangeNotifier {
-  var parties = <String>[];
-
-  // Function to update party size, only in the positives
-  void updatePartyTotal(bool added, String partyName) {
-    if (added) {
-      // Creates specific party
-      parties.add(partyName);
-    } else if (parties.contains(partyName)) {
-      // Removes states party
-      parties.removeAt(parties.indexOf(partyName));
-    } else {
-      print(added);
-      print(partyName);
-      print("Nothing Happened");
-    }
-    notifyListeners();
-  }
-}
-
-class MyHomePage extends StatefulWidget {
+class MainPage extends StatefulWidget {
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<MainPage> createState() => _MainPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+// Creates home screen/page and changes it based on state saved ID (could be enum eventually)
+class _MainPageState extends State<MainPage> {
+  final List<Widget> _screens = const [
+    HomeScreen(),
+    PartyScreen(),
+    Snapshotscreen(),
+  ];
+
   @override
   Widget build(BuildContext context) {
+    // Setup default screen (using the state data)
     var appState = context.watch<MyAppState>();
-    int parties = appState.parties.length;
-    bool adding = true;
-
-    String header = "Total Parties: $parties";
-    if (parties == 0) {
-      //defaults header
-      header = "How many parties are there?";
-    }
+    var page = _screens[appState.pageID];
 
     // Creates a box with constraints so things can be scaled
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Variable For Storing Value From TextBox
-        final textController = TextEditingController();
-        return Scaffold(
-          body: SafeArea(
-            child: Container(
-              padding: EdgeInsets.symmetric(vertical: 80.0),
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(30.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        header,
-                        style: Theme.of(context).textTheme.headlineMedium,
-                        textAlign: TextAlign.center,
-                      ),
-                      Flexible(
-                        fit: FlexFit.loose,
-                        child: Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: parties,
-                            itemBuilder: (context, index) {
-                              // Generates Colour to give each party tab
-                              final color = Colors
-                                  .primaries[index % Colors.primaries.length]
-                                  .shade300;
-                              // Creates each party tab
-                              return PartyLabel(
-                                appState: appState,
-                                index: index,
-                                tabColor: color,
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // Add Button
-                              ConstrainedBox(
-                                constraints: BoxConstraints(
-                                  minWidth: 100,
-                                  maxWidth: 200,
-                                ),
-                                child: TextField(
-                                  // Max characters is 15
-                                  maxLength: 15,
-                                  // Controller to hold text box data
-                                  controller: textController,
-                                  decoration: InputDecoration(
-                                    hintText: "Party Name",
-                                    filled: false,
-                                    border: InputBorder.none,
-                                  ),
-                                  // If the text is entered through
-                                  onSubmitted: (value) {
-                                    if (value != "") {
-                                      appState.updatePartyTotal(
-                                        adding,
-                                        textController.text,
-                                      );
-                                      textController.clear();
-                                    }
-                                  },
-                                  buildCounter:
-                                      (
-                                        BuildContext context, {
-                                        required int currentLength,
-                                        required int? maxLength,
-                                        required bool isFocused,
-                                      }) {
-                                        return Align(
-                                          alignment: Alignment.topLeft,
-                                          child: Text(
-                                            "$currentLength / $maxLength",
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: const Color.fromARGB(
-                                                255,
-                                                109,
-                                                63,
-                                                63,
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                ),
-                              ),
-
-                              SizedBox(width: 10.0),
-
-                              ElevatedButton(
-                                onPressed: () {
-                                  // add a new party (shouldnt submit if blank name)
-                                  if (textController.text != "" ||
-                                      textController.text == "") {
-                                    appState.updatePartyTotal(
-                                      adding,
-                                      textController.text,
-                                    );
-                                    textController.clear();
-                                  }
-                                },
-                                child: Text("+"),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
+        // Displays the current page
+        return page;
       },
-    );
-  }
-}
-
-class PartyLabel extends StatelessWidget {
-  const PartyLabel({
-    super.key,
-    required this.appState,
-    required this.index,
-    required this.tabColor,
-  });
-
-  final MyAppState appState;
-  final int index;
-  final Color tabColor;
-
-  @override
-  Widget build(BuildContext context) {
-    var parties = appState.parties.length;
-    bool adding = true;
-    String name = appState.parties[index];
-
-    return Align(
-      alignment: Alignment.center,
-      child: Card(
-        color: tabColor,
-        child: Padding(
-          padding: const EdgeInsets.only(left: 5.0, right: 5.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircleAvatar(
-                radius: 15,
-                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                child: Text(
-                  (index + 1).toString(),
-                  style: TextStyle(color: Theme.of(context).primaryColorDark),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-                child: Text(name),
-              ),
-              IconButton(
-                icon: Icon(Icons.delete),
-                onPressed: () {
-                  // Remove this party
-                  appState.updatePartyTotal(!adding, name);
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
