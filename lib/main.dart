@@ -1,5 +1,7 @@
 import 'package:app_billsplitter/Screens/Main/home_screen.dart';
-import 'package:app_billsplitter/Screens/Main/snapshot_screen.dart';
+import 'package:app_billsplitter/Screens/Main/placeholder_screen.dart';
+import 'package:app_billsplitter/Screens/Main/scan_screen.dart';
+import 'package:app_billsplitter/Utility(ReuseFunctions)/page_type.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -95,11 +97,12 @@ class MainPage extends StatefulWidget {
 
 // Creates home screen/page and changes it based on state saved ID (could be enum eventually)
 class _MainPageState extends State<MainPage> {
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    PartyScreen(),
-    Snapshotscreen(),
-  ];
+  final Map<int, Widget> _screens = {
+    PageType.Placeholder: const PlaceholderScreen(),
+    PageType.Home: const HomeScreen(),
+    PageType.Party: const PartyScreen(),
+    PageType.Scan: const ScanScreen(),
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -110,8 +113,8 @@ class _MainPageState extends State<MainPage> {
     // Creates a box with constraints so things can be scaled
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Displays the current page
-        return page;
+        // Displays the current page ("??" is an alternative for if the [age is returned null])
+        return page ?? const Center(child: Text("Page not found"));
       },
     );
   }

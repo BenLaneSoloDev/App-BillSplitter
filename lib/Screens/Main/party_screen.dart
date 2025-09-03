@@ -1,7 +1,9 @@
+import 'package:app_billsplitter/Utility(ReuseFunctions)/page_type.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../SubWidgets/party_card.dart';
 import '../../app_state.dart';
+import '../../UniversalWidgets/page_change_bar.dart';
 
 class PartyScreen extends StatelessWidget {
   const PartyScreen({super.key});
@@ -11,6 +13,10 @@ class PartyScreen extends StatelessWidget {
     // Gets access to the app state
     var appState = context.watch<MyAppState>();
     int parties = appState.parties.length;
+
+    // Setup variables for page traversal
+    int lastPage = PageType.Scan;
+    int nextPage = PageType.Placeholder;
 
     // Variable to determine if user is added or removed
     bool adding = true;
@@ -141,6 +147,16 @@ class PartyScreen extends StatelessWidget {
                         ],
                       ),
                     ),
+                  ),
+
+                  // Creates spacing between page swap buttons
+                  SizedBox(height: 20.0),
+
+                  // Creates tab at the bootom of screen for swapping pages
+                  PageSwapBar(
+                    appState: appState,
+                    lastPage: lastPage,
+                    nextPage: nextPage,
                   ),
                 ],
               ),
